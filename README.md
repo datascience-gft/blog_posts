@@ -1,2 +1,2 @@
-# blog_posts
-Collection of code supporting blog posts from GFT AI Lab
+# Supporting Material for GFT AI Lab Blog Posts
+A collection of code supporting blog posts from GFT AI Lab.
