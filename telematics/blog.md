@@ -1,4 +1,4 @@
-### Telematics Car Insurance on Google Cloud with Machine Learning and GCP
+### Telematics Car Insurance on Google Cloud with Machine Learning
 
 ###### Kaywords:
 GCP, KAFKA, Guidewire
