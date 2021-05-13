@@ -11,6 +11,9 @@ Kaggle
 
 ###### Architecture: GCP Components
 
+###### Alternative Approaches:
+Cloud IoT / PubSub / Dataflow 
+
 ###### Kafka Setup and Config
 - Broker/Producer/Consumer/Zookeeper/Simulators
 
