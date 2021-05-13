@@ -1,26 +1,33 @@
-### Telematics Car Insurance on Google Cloud with Machine Learning
+### AI for Insurance - How to Personalize Auto Insurance Using Telematics Data With Machine Learning on Google Cloud Platform
 
-###### Kaywords:
-GCP, KAFKA, Guidewire
+###### Keywords:
+Insurance, Machine Learning, Artificial Intelligence, GCP, KAFKA, Guidewire
+
+###### Introduction
+Overview of the project
 
 ###### Sample Data Source
 Kaggle
 
 ###### Architecture: GCP Components
 
+###### Alternative Approaches:
+Cloud IoT / PubSub / Dataflow 
+
 ###### Kafka Setup and Config
-Broker/Producer/Consumer/Zookeeper/Simulators
+- Broker/Producer/Consumer/Zookeeper/Simulators
 
 
 ###### ML Modelling:
-Predictive Maintenance
-Competitive Driving Analysis
-Abnormaly Detection
+- Predictive Maintenance
+- Competitive Driving Analysis
+- Abnormally Detection
 
 ###### Model Deployment
-Cloud Run
+- Cloud Run
 
-###### Query score from Guidewire
-Guidewire
+###### Generate Quotes from Guidewire
+- Query score from Guidewire
+- Generate quotes from Guidewire
 
 ###### Conclusion
