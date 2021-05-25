@@ -1,4 +1,4 @@
-### AI for Insurance - How to Personalize Auto Insurance Using Telematics Data With Machine Learning on Google Cloud Platform
+# AI for Insurance - How to Personalize Auto Insurance Using Telematics Data With Machine Learning on Google Cloud Platform
 
 Many black-box insurance providers leverage telematics data for offering cheap and flexible premium for their insurers. 
 
@@ -23,18 +23,35 @@ The solution is implemented on the following Google Cloud's services:
   - AI Platform: a fully managed unified platform for training, serving, managing machine learning workflows.
 - Data Stores:
   - Big Query: a fully-managed enterprise-level data warehouse. Data can be queried using SQL at scale of perabyte. In this case, we use BQ query to store streamed(simulated) in telematics data.
-  - Cloud Storage: a fully-managed object store. In this case, model artefacts. 
+  - Cloud Storage: a fully-managed object store. In this case, we use it to store model artefacts. 
+  - Cloud SQL(SQL Server): a fully managed MS SQL Server as a backend relational database for Guidewire PolicyCenter(explained later).
 - Model Hosting Services:
   - Cloud Run: a severless, fully-managed and highly scalable host environment for containerised application. In this case, we leverage Cloud Run to serve model prediction services run in docker containers. 
-
-
-###### Alternative Approaches:
 
 ### Kafka
 
 We also adopt the widely used open source application messaging tool Kafka for consuming and buffering streamed-in telematics data.
 
 In this blog, we deployed Kafka onto GCP using [Bitnami](https://docs.bitnami.com/google/infrastructure/kafka/). Bitnami provide service for simplifying the deployment of Kafka brokers and ZooKeeper.  
+
+### Guidewire
+
+Guidewire is the widely used software in the P&C insurance industry. For several consective year to 2020, it has been recognised as a learder in Gartner Inc's [Magic Quadrant for P&C Core Platforms](https://www.guidewire.com/about-us/news-and-events/press-releases/20201111/guidewire-insurancesuite-positioned-leader-gartner). 
+
+We have deployed Guidewire's Policy Center v10.0.3 a Windows VM hosted on Google Cloud. The Policy Center is configured to store its data in a MS SQL server database fully managed by Google Cloud.
+
+We have integrated the machine learning prediction service with the policy quoting engine of the Guidewire's Policy Center softwre. The Policy Center can query the machine learning serive using REST API for accessing predicted score on drivers's risk level or vehicle's maintenance history. The score can then be used as a basis for adjusting corresponding premium prices originally proposed by Guidewire's quoting engine. 
+
+The machine learning integrated quoting service can also be triggered remotely through SOAP API.   
+
+### Solution Architecture 
+
+All the functional components mentioned above is composed together to form the following architecture：
+
+![architecture](./figs/architecture.PNG)
+
+
+## Alternative Approaches:
 
 ### Cloud IoT
 
@@ -50,10 +67,8 @@ The foundamental difference between Kafka and Pub/Sub is in the way that the mes
 
 Which is better choise strictly depends on the way how message is consumed and managed by downstream application. 
 
-###### Architecture: GCP Components
 
-
-###### Sample Data Source
+## Sample Data Source
 
 We trained the models using telematics data that follows the OBD-II standard. The telematics data is stored in Google Cloud's BigQuery, which constitutes of the following fields:
 
@@ -68,21 +83,20 @@ We trained the models using telematics data that follows the OBD-II standard. Th
 - eLoad, Engine load measures how much air (and fuel) you're sucking into the engine and then compares that value to the theoretical maximum.
 
 
-
-###### Kafka Setup and Config
+## Kafka Setup and Config
 - Broker/Producer/Consumer/Zookeeper/Simulators
 
 
-###### ML Modelling:
+## ML Modelling:
 - Predictive Maintenance
 - Competitive Driving Analysis
 - Abnormally Detection
 
-###### Model Deployment
+## Model Deployment
 - Cloud Run
 
-###### Generate Quotes from Guidewire
+## Generate Quotes from Guidewire
 - Query score from Guidewire
 - Generate quotes from Guidewire
 
-###### Conclusion
+## Conclusion
