@@ -1,4 +1,4 @@
-### Telematics Car Insurance on Google Cloud with Machine Learning
+### AI for Insurance - How to Personalize Auto Insurance Using Telematics Data With Machine Learning on Google Cloud Platform
 
 Many black-box insurance providers leverage telematics data for offering cheap and flexible premium for their insurers. 
 
@@ -27,6 +27,9 @@ The solution is implemented on the following Google Cloud's services:
 - Model Hosting Services:
   - Cloud Run: a severless, fully-managed and highly scalable host environment for containerised application. In this case, we leverage Cloud Run to serve model prediction services run in docker containers. 
 
+
+###### Alternative Approaches:
+
 ### Kafka
 
 We also adopt the widely used open source application messaging tool Kafka for consuming and buffering streamed-in telematics data.
@@ -36,7 +39,6 @@ In this blog, we deployed Kafka onto GCP using [Bitnami](https://docs.bitnami.co
 ### Cloud IoT
 
 In the proposed architecture, we do not include [Google Cloud IoT](https://cloud.google.com/solutions/iot), because we do not collect data from actual telematics devices. Cloud IoT Core is a fully managed service on Google Cloud Platform that allows you to easily and securely connect, manage, and ingest data from millions of globally dispersed devices. 
-
 
 ### Cloud Pub/Sub
 
@@ -49,7 +51,6 @@ The foundamental difference between Kafka and Pub/Sub is in the way that the mes
 Which is better choise strictly depends on the way how message is consumed and managed by downstream application. 
 
 ###### Architecture: GCP Components
-
 
 
 ###### Sample Data Source
@@ -69,18 +70,19 @@ We trained the models using telematics data that follows the OBD-II standard. Th
 
 
 ###### Kafka Setup and Config
-Broker/Producer/Consumer/Zookeeper/Simulators
+- Broker/Producer/Consumer/Zookeeper/Simulators
 
 
 ###### ML Modelling:
-Predictive Maintenance
-Competitive Driving Analysis
-Abnormaly Detection
+- Predictive Maintenance
+- Competitive Driving Analysis
+- Abnormally Detection
 
 ###### Model Deployment
-Cloud Run
+- Cloud Run
 
-###### Query score from Guidewire
-Guidewire
+###### Generate Quotes from Guidewire
+- Query score from Guidewire
+- Generate quotes from Guidewire
 
 ###### Conclusion
