@@ -1,24 +1,22 @@
 # AI for Insurance - How to Personalize Auto Insurance Using Telematics Data With Machine Learning on Google Cloud Platform
 
-Many black-box insurance providers leverage telematics data for offering cheap and flexible premium for their insurers. Based on continuously monitoring driver's behaviour and driving pattern, insurance providers can dynamically change the price so that it can be more affordable for a wider population. This give opportunity for newly qualified yet careful drivers to demonstrate the risk level of their driving, which deserves for lower premium price. In the UK, [there are 750,000 cars in the UK with black box fitted in 2017](https://www.fairerfinance.com/insights/blog/are-black-boxes-stiffling-competition-in-the-car-insurance-market). In 2016, there were only 25 telematics policies. [This number of more than doubled to 55 in 2017](https://www.thisismoney.co.uk/money/cars/article-7332163/The-number-telematics-insurance-policies-doubled-recent-years.html).
+Many black-box insurance, also known as telematics insurance, leverage telematics data for offering cheap and flexible premium for their insurers. Based on continuously monitoring driver's behaviour and driving pattern, insurance providers can dynamically change the price. This provides opportunities for individual newly qualified yet careful drivers to demonstrate that they deserve a cheaper price than the one was set for the whole age group. In the UK, [there are 750,000 cars in the UK with black box fitted in 2017](https://www.fairerfinance.com/insights/blog/are-black-boxes-stiffling-competition-in-the-car-insurance-market). In 2016, there were only 25 telematics policies. [This number of more than doubled to 55 in 2017](https://www.thisismoney.co.uk/money/cars/article-7332163/The-number-telematics-insurance-policies-doubled-recent-years.html). The initial targeted drivers were newly qualified young drivers. Since then, black box providers are now targeting a range of drivers. 
 
-The initial targeted drivers are newly qualified young drivers. Since then, black box providers are now targeting a ranger of drivers. Telematics devices allow the insurance providers to track insurers' driving through an app or by having a black box fitted in their vehicle. The insurer will then usually offer cheaper insurance for careful driving and the policyholder is considered as a lower risk driver. 
+Telematics devices allow the insurance providers to track insurers' driving through an app or by having a telematics box fitted in their vehicle. Enormous amount of data streamed by telematics devices can be analysed using cutting-edge machine learning models to help and mine insights into driver's behaviour. With the help of telematics data, owner of the vehicle can be proactively warned on abnormality before it becoming severe.
 
-Enormous amount of data streamed by telematics devices can be analysed using cutting-edge machine learning models to help and mine insights into driver's behaviour. With the help of telematics data, owner of the vehicle can be proactively warned on abnormality before it becoming severe.
-
-In this blog, we achived the following objectives:
+In this blog, we present an implemented solutions for predicting risk scores by analysing telematics data. We achived the following objectives:
 - we designed a Google Cloud based solution architecture for training and serving machine learning on streamed telematics data streaming.
-- we trained the machine learning models using telematics data that are following the OBD-II standard. 
-- we trained machine models for:
+- we trained a set of machine learning models based on pre-collected [publicly available telematics data](https://www.kaggle.com/yunlevin/levin-vehicle-telematics) that are following the OBD-II standard. 
+- we trained different kind of machine learning models, include supervised and unsupervised, that can demonstrate the capability of doing:
   - Vehicle predictive maintenance
   - Anormaly detection
   - Assessing risk in speed control
 
 The solution is implemented on the following Google Cloud's services:
 - Machine Learning:
-  - AI Platform: a fully managed unified platform for training, serving, managing machine learning workflows.
+  - AI Platform: a fully managed unified platform for training, serving and managing machine learning workflows.
 - Data Stores:
-  - Big Query: a fully-managed enterprise-level data warehouse. Data can be queried using SQL at scale of perabyte. In this case, we use BQ query to store streamed(simulated) in telematics data.
+  - Big Query: a fully-managed enterprise-level data warehouse that can be queried using SQL at scale of perabyte. In this case, we use BigQuery to store streamed telematics data for being processed and analysed.
   - Cloud Storage: a fully-managed object store. In this case, we use it to store model artefacts. 
   - Cloud SQL(SQL Server): a fully managed MS SQL Server as a backend relational database for Guidewire PolicyCenter(explained later).
 - Model Hosting Services:
@@ -26,17 +24,17 @@ The solution is implemented on the following Google Cloud's services:
 
 ### Kafka
 
-We also adopt the widely used open source application messaging tool Kafka for consuming and buffering streamed-in telematics data.
+We adopt the widely used open source application messaging tool Kafka for buffering streamed-in telematics data that will later be consumed, and stored into BigQuery.
 
 In this blog, we deployed Kafka onto GCP using [Bitnami](https://docs.bitnami.com/google/infrastructure/kafka/). Bitnami provide service for simplifying the deployment of Kafka brokers and ZooKeeper.  
 
 ### Guidewire
 
-Guidewire is the widely used software in the P&C insurance industry. For several consective year to 2020, it has been recognised as a learder in Gartner Inc's [Magic Quadrant for P&C Core Platforms](https://www.guidewire.com/about-us/news-and-events/press-releases/20201111/guidewire-insurancesuite-positioned-leader-gartner). 
+Guidewire is the widely used software in the P&C insurance industry. For several consecutive year to 2020, it has been recognised as a learder in Gartner Inc's [Magic Quadrant for P&C Core Platforms](https://www.guidewire.com/about-us/news-and-events/press-releases/20201111/guidewire-insurancesuite-positioned-leader-gartner). 
 
 We have deployed Guidewire's Policy Center v10.0.3 a Windows VM hosted on Google Cloud. The Policy Center is configured to store its data in a MS SQL server database fully managed by Google Cloud.
 
-We have integrated the machine learning prediction service with the policy quoting engine of the Guidewire's Policy Center softwre. The Policy Center can query the machine learning serive using REST API for accessing predicted score on drivers's risk level or vehicle's maintenance history. The score can then be used as a basis for adjusting corresponding premium prices originally proposed by Guidewire's quoting engine. 
+We have integrated the machine learning prediction service into the policy quoting engine of the Policy Center so that it can query machine learning model deployed into Cloud Run containers using REST API for accessing predicted score on drivers's risk level or vehicle's maintenance history. The score can then be used as a basis for adjusting corresponding premium prices originally proposed by any Guidewire's quoting engine. 
 
 The machine learning integrated quoting service can also be triggered remotely through SOAP API.   
 
@@ -49,20 +47,19 @@ All the functional components mentioned above is composed together to form the f
 
 ## Alternative Approaches:
 
-### Cloud IoT
-
-In the proposed architecture, we do not include [Google Cloud IoT](https://cloud.google.com/solutions/iot), because we do not collect data from actual telematics devices. Cloud IoT Core is a fully managed service on Google Cloud Platform that allows you to easily and securely connect, manage, and ingest data from millions of globally dispersed devices. 
-
 ### Cloud Pub/Sub
 
-Google provides an alternative messaging service that is fully-managed, serverless, highly scalable, and  native to the Google Cloud. Pub/Sub is a bundled service of Cloud IoT.
+Google provides an alternative messaging service that is serverless, highly scalable, and fully-managed. Pub/Sub is a bundled service of Cloud IoT.
 
 The foundamental difference between Kafka and Pub/Sub is in the way that the message delivery is handle
-- Pub/Sub offers *at-least-once* message delivery and *best-effort ordering* to existing subscribers. 
-- whereas [Kafka *guarantees exactly-once* delivery by default](https://kafka.apache.org/documentation/). Moreover, Kafka [guarantees](https://kafka.apache.org/documentation/#intro_guarantees) that any consumer of a given topic-partition will always read that partition's events *in exactly the same order* as they were written.
+- Pub/Sub offers **at-least-once** message delivery and **best-effort ordering** to existing subscribers. 
+- whereas [Kafka **guarantees exactly-once** delivery by default](https://kafka.apache.org/documentation/). Moreover, Kafka [guarantees](https://kafka.apache.org/documentation/#intro_guarantees) that any consumer of a given topic-partition will always read that partition's events **in exactly the same order** as they were written.
 
-Which is better choise strictly depends on the way how message is consumed and managed by downstream application. 
+Which is better choise strictly depends on the way that downstream applications were designed for consuming and managing the buffered message. 
 
+### Cloud IoT
+
+In the proposed architecture, we did not include [Google Cloud IoT](https://cloud.google.com/solutions/iot), because we did not collect data from any actual telematics devices, instead from pre-collected publicly available data. Cloud IoT Core is a fully managed service on Google Cloud Platform that allows you to easily and securely connect, manage, and ingest data from millions of globally dispersed devices. 
 
 ## Sample Data Source
 
