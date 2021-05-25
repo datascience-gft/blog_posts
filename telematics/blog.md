@@ -1,10 +1,6 @@
 # AI for Insurance - How to Personalize Auto Insurance Using Telematics Data With Machine Learning on Google Cloud Platform
 
-Many black-box insurance providers leverage telematics data for offering cheap and flexible premium for their insurers. 
-
-Based on continuously monitoring driver's behaviour and driving pattern, insurance providers can dynamically change the price so that it can be more affordable for a wider population. This give opportunity for newly qualified yet careful drivers to demonstrate the risk level of their driving, which deserves for lower premium price.  
-
-In the UK, [there are 750,000 cars in the UK with black box fitted in 2017](https://www.fairerfinance.com/insights/blog/are-black-boxes-stiffling-competition-in-the-car-insurance-market). In 2016, [there were only 25 telematics policies. This number of more than doubled to 55 in 2017](https://www.thisismoney.co.uk/money/cars/article-7332163/The-number-telematics-insurance-policies-doubled-recent-years.html).
+Many black-box insurance providers leverage telematics data for offering cheap and flexible premium for their insurers. Based on continuously monitoring driver's behaviour and driving pattern, insurance providers can dynamically change the price so that it can be more affordable for a wider population. This give opportunity for newly qualified yet careful drivers to demonstrate the risk level of their driving, which deserves for lower premium price. In the UK, [there are 750,000 cars in the UK with black box fitted in 2017](https://www.fairerfinance.com/insights/blog/are-black-boxes-stiffling-competition-in-the-car-insurance-market). In 2016, there were only 25 telematics policies. [This number of more than doubled to 55 in 2017](https://www.thisismoney.co.uk/money/cars/article-7332163/The-number-telematics-insurance-policies-doubled-recent-years.html).
 
 The initial targeted drivers are newly qualified young drivers. Since then, black box providers are now targeting a ranger of drivers. Telematics devices allow the insurance providers to track insurers' driving through an app or by having a black box fitted in their vehicle. The insurer will then usually offer cheaper insurance for careful driving and the policyholder is considered as a lower risk driver. 
 
