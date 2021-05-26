@@ -80,10 +80,46 @@ We trained the models using telematics data that follows the OBD-II standard. Th
 - Broker/Producer/Consumer/Zookeeper/Simulators
 
 
-## ML Modelling:
-- Predictive Maintenance
-- Competitive Driving Analysis
-- Abnormally Detection
+## ML Modelling
+
+### Predictive Maintenance
+
+- Why do we want to do predictive maintenance
+- How and What did we do the predictive maintenance
+
+We first use clustering to cluster the telematics data into two groups and get the labels for the telematics data (outlier detection). 
+Next, use the labels to train the classifiers which can give signals about whether the incoming telematics data is an outlier or not. 
+Finally, we exported the model and deployed it on Cloud Run.
+
+#### Clustering
+We use DBSCAN (Density-Based Spatial Clustering of Applications with Noise) for clustering to get the labels. 
+This technique is one of the most common clustering algorithms which works based on density of object. 
+
+
+It works based on two parameters: epsilon and Minimum Points
+- epsilon determines a specified radius that if includes enough number of points within, we call it dense area
+- minimumSamples determine the minimum number of data points we want in a neighborhood to define a cluster.
+
+
+Here is the visualization of the clustering results with the labels
+![clustering](figs/clustering.png)
+
+
+#### Classification Using the Cluster Labels
+
+
+
+#### Export and Deploy the model
+
+In this notebook, we have explored the following areas:
+- Used t-SNE technique to visualize the high-dimensional dataset, find distinctions among the dataset 
+- Used DBSCAN to perform the outlier detection (clustering) against the unlabelled dataset. From the clustering, we got the labels of the instances
+- We then used the labels to train classifiers to perform both multiclass classification and binary classification with XGBoost and Decision Tree algorithms. 
+- Generally, the classifiers are good at predicting the labels except for the noises which might be due to their low occurrences (~0.1%)
+- Finally, we exported the model and deployed it on Cloud Run
+
+### Competitive Driving Analysis
+### Abnormally Detection
 
 ## Model Deployment
 - Cloud Run
