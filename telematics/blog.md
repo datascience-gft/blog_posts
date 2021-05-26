@@ -90,7 +90,7 @@ We trained the models using telematics data that follows the OBD-II standard. Th
 
 We have survey a few telematics insurance providers in the UK. We found from the result (as shown in the following figure) that one of the key areas that these companies want the telematics data to reveal is how the driver control speed while driving. Many young and newly qualified drivers carry the behavour of competitive driving. They tend to apply rapid change in speed (acceleration or deceleration).
 
-![telematicsProviders](./figs/telematicsInsProviders.PNG)
+![telematicsProviders](./figs/telematicsInsProviders.png)
 
 The telematics data we collected from Kaggle contain timely record of various types of metrics of a vehicle when it was driving on a trip. We would like to use this data to train a machine learning model to be able to predict whether certain pattern of telematics recording is associated to risky speed control behavour. In other words, given a continuous of reading of telematics data for, e.g. 30 seconds, we want the model to predict if this driver is a risky speed controller. 
 
@@ -163,7 +163,7 @@ The two layers of GRU unites are followed by one feed forward layers and an outp
 
 Below is the train and test accuracy monitored during the training process.
 
-![model_accuracy](./figs/gru_accuracy.PNG)
+![model_accuracy](./figs/gru_accuracy.png)
 
 Once the model is trained we output the model as `pkl` file, embed it into a container and deploy to Cloud Run.
 
