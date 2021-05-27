@@ -95,30 +95,98 @@ get the needed repairs in time when the intervals are too big.
 Compared with corrective maintenance and planned maintenance, predictive maintenance predict the part and time for maintenance based on the monitoring of the actual 
 conditions of the vehicles. By doing this, it avoids unnecessary replacements in preventive maintenance and unexpected repairs in corrective maintenance.
 
-In this study, we train our classification models to find the predict whether the vehicle needs to be considered 
-for maintenance using the telematics data
-
-
-we Outlier detection using unsupervised learning to isolate deviating vehicles using  various parameters e.g., kpl, rpm, battery, temperature, pressure, etc to support fleet management (vehicles should be similar )
-
-
-We first use clustering to cluster the telematics data into two groups and get the labels for the telematics data (outlier detection). 
-Next, use the labels to train the classifiers which can give signals about whether the incoming telematics data is an outlier or not. 
-Finally, we exported the model and deployed it on Cloud Run.
+In this study, we trained classification models to predict the vehicles which need to be considered 
+for maintenance using the telematics data. 
+Since the original data does not have a label indicating the status of the vehicles, 
+we first used clustering to do the outlier detection which is to cluster the telematics data into two groups, i.e., outliers and not outliers, 
+and use the cluster labels as the target column for training the classifiers. 
+Finally, we exported the model and deployed it on Cloud Run. 
 
 #### Clustering
-We use DBSCAN (Density-Based Spatial Clustering of Applications with Noise) for clustering to get the labels. 
+
+We use Density-Based Spatial Clustering of Applications with Noise (DBSCAN) for clustering to get the labels. 
 This technique is one of the most common clustering algorithms which works based on density of object. 
 
-
-It works based on two parameters: epsilon and Minimum Points
+It works based on two parameters: epsilon and minimum samples
 - epsilon determines a specified radius that if includes enough number of points within, we call it dense area
-- minimumSamples determine the minimum number of data points we want in a neighborhood to define a cluster.
+- minimum samples determine the minimum number of data points we want in a neighborhood to define a cluster.
+
+We first use the t-SNE technique to reduce the dimensionality and visualise the clusters. 
 
 
-Here is the visualization of the clustering results with the labels
+```python
+cluster_dataset2 = cluster_dataset[features].drop(['battery', 'tAdv'], axis=1)
+Clus_dataSet2 = cluster_dataset2.copy()
+Clus_dataSet2 = np.nan_to_num(Clus_dataSet2)
+Clus_dataSet2 = StandardScaler().fit_transform(Clus_dataSet2)
+
+# t-SNE for finding clusters in high-dimensional space
+from sklearn.manifold import TSNE
+
+tsne = TSNE(n_components=2, verbose=1, perplexity=50, n_iter=500)
+tsne_results = tsne.fit_transform(Clus_dataSet2)
+
+
+df_subset['tsne-2d-one'] = tsne_results[:,0]
+df_subset['tsne-2d-two'] = tsne_results[:,1]
+plt.figure(figsize=(8,8))
+sns.scatterplot(
+    x="tsne-2d-one", y="tsne-2d-two",
+#     hue='labels',
+#     palette=sns.color_palette( n_colors=4),
+    data=df_subset,
+    legend="full",
+    alpha=0.5
+)
+```
+Here is the visualization of the dataset and from it we can see several dinstictive clusters. 
+
+![cluster visualisation](figs/cluster_visualisation_tsne.png)
+
+
+Then, by changing the hyper-parameter epsilon of the DBSCAN clustering models, we try to find the best match which can 
+label the clusters matching the visualisation.
+
+```python
+# search for the best eps for this case
+min_samples= 10
+for eps in [0.05, 0.1, 0.2, 0.3, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 5.0]:
+    print('epsilon is: ', eps, '; minmum samples is: ', min_samples)
+    dbscan = DBSCAN(eps=eps , min_samples=min_samples)
+    dbscan.fit(Clus_dataSet2)
+    print(set(dbscan.labels_))
+    cluster_dataset2["labels"]=dbscan.labels_
+    df_subset["labels"]=dbscan.labels_
+    print(cluster_dataset2.labels.value_counts())
+    
+    
+    plt.figure(figsize=(8,8))
+    sns.scatterplot(
+        x="tsne-2d-one", y="tsne-2d-two",
+        hue='labels',
+        palette=sns.color_palette( n_colors=len(set(dbscan.labels_))),
+        data=df_subset,
+        legend="full",
+        alpha=0.5
+    )
+    plt.show()
+
+```
+
+It was found that when epsilon = 3.0, the clustering results matches the visualisation of the clusters the best, which is 
+shown in the figure below.
+
 ![clustering](figs/clustering.png)
 
+Therefore, we set the cluster labels for the model with epsilon=3.0 and min_samples=10 as the target column for training 
+the classifiers in the next step.
+
+```python
+dbscan = DBSCAN(eps=3.0 , min_samples=min_samples)
+dbscan.fit(Clus_dataSet2)
+cluster_dataset2["labels"]=dbscan.labels_
+df_subset["labels"]=dbscan.labels_
+```
 
 #### Classification Using the Cluster Labels
 
