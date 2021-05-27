@@ -84,8 +84,23 @@ We trained the models using telematics data that follows the OBD-II standard. Th
 
 ### Predictive Maintenance
 
-- Why do we want to do predictive maintenance
-- How and What did we do the predictive maintenance
+Maintenance can be planned and carried out in different ways and the three common
+planning paradigms are corrective, preventive and predictive maintenance ([source](https://hh.diva-portal.org/smash/get/diva2:789498/FULLTEXT01.pdf)).
+Corrective maintenance takes place when the fault or failure has occurred, so it often causes unexpected downtime of the services. 
+Preventive maintenance or planned maintenance on the other hand is scheduled at certain intervals regardless of the actual status of the vehicles. 
+However, the interval is very difficult to be determined precisely given different vehicles can be in very different conditions due to various factors. 
+Therefore, predictive maintenance tends to cause either unnecessary repairs when the intervals are too small or cause vehicles not to 
+get the needed repairs in time when the intervals are too big.
+
+Compared with corrective maintenance and planned maintenance, predictive maintenance predict the part and time for maintenance based on the monitoring of the actual 
+conditions of the vehicles. By doing this, it avoids unnecessary replacements in preventive maintenance and unexpected repairs in corrective maintenance.
+
+In this study, we train our classification models to find the predict whether the vehicle needs to be considered 
+for maintenance using the telematics data
+
+
+we Outlier detection using unsupervised learning to isolate deviating vehicles using  various parameters e.g., kpl, rpm, battery, temperature, pressure, etc to support fleet management (vehicles should be similar )
+
 
 We first use clustering to cluster the telematics data into two groups and get the labels for the telematics data (outlier detection). 
 Next, use the labels to train the classifiers which can give signals about whether the incoming telematics data is an outlier or not. 
