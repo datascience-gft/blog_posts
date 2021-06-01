@@ -84,7 +84,7 @@ We trained the models using telematics data that follows the OBD-II standard. Th
 
 ### Predictive Maintenance
 
-Maintenance can be planned and carried out in different ways and the three common
+Maintenance can be planned and carried out in different ways, and the three common
 planning paradigms are corrective, preventive and predictive maintenance ([source](https://hh.diva-portal.org/smash/get/diva2:789498/FULLTEXT01.pdf)).
 Corrective maintenance takes place when the fault or failure has occurred, so it often causes unexpected downtime of the services. 
 Preventive maintenance or planned maintenance on the other hand is scheduled at certain intervals regardless of the actual status of the vehicles. 
@@ -92,30 +92,34 @@ However, the interval is very difficult to be determined precisely given differe
 Therefore, predictive maintenance tends to cause either unnecessary repairs when the intervals are too small or cause vehicles not to 
 get the needed repairs in time when the intervals are too big.
 
-Compared with corrective maintenance and planned maintenance, predictive maintenance predict the part and time for maintenance based on the monitoring of the actual 
-conditions of the vehicles. By doing this, it avoids unnecessary replacements in preventive maintenance and unexpected repairs in corrective maintenance.
+Compared with corrective maintenance and planned maintenance, predictive maintenance predicts the part and time for maintenance based on the monitoring of the actual 
+conditions of the vehicles. 
+By doing this, unnecessary replacements in preventive maintenance and unexpected repairs in corrective maintenance can be avoided.
 
-In this study, we trained classification models to predict the vehicles which need to be considered 
-for maintenance using the telematics data. 
+In this study, we trained classification models to predict the vehicles which need to be considered for maintenance using the telematics data. 
 Since the original data does not have a label indicating the status of the vehicles, 
 we first used clustering to do the outlier detection which is to cluster the telematics data into two groups, i.e., outliers and not outliers, 
-and use the cluster labels as the target column for training the classifiers. 
+and then use the cluster labels as the target column for training the classifiers. 
 Finally, we exported the model and deployed it on Cloud Run. 
 
 #### Clustering
 
-We use Density-Based Spatial Clustering of Applications with Noise (DBSCAN) for clustering to get the labels. 
+For clustering, we use the Density-Based Spatial Clustering of Applications with Noise (DBSCAN) to get the labels. 
 This technique is one of the most common clustering algorithms which works based on density of object. 
 
-It works based on two parameters: epsilon and minimum samples
-- epsilon determines a specified radius that if includes enough number of points within, we call it dense area
-- minimum samples determine the minimum number of data points we want in a neighborhood to define a cluster.
+It works based on two parameters: `epsilon` and `minimum samples`
+- `epsilon` determines a specified radius that if includes enough number of points within, we call it dense area
+- `minimum samples` determine the minimum number of data points we want in a neighborhood to define a cluster
 
-We first use the t-SNE technique to reduce the dimensionality and visualise the clusters. 
+For clustering, we dropped the columns "battery" and "tAdv" for we found these two columns are not very informative from our exploration. 
+The data is shown as below
+
+![data for clustering](figs/data_for_clustering.png)
+
+We then use the t-SNE technique to reduce the dimensionality and visualise the clusters. 
 
 
 ```python
-cluster_dataset2 = cluster_dataset[features].drop(['battery', 'tAdv'], axis=1)
 Clus_dataSet2 = cluster_dataset2.copy()
 Clus_dataSet2 = np.nan_to_num(Clus_dataSet2)
 Clus_dataSet2 = StandardScaler().fit_transform(Clus_dataSet2)
@@ -132,19 +136,17 @@ df_subset['tsne-2d-two'] = tsne_results[:,1]
 plt.figure(figsize=(8,8))
 sns.scatterplot(
     x="tsne-2d-one", y="tsne-2d-two",
-#     hue='labels',
-#     palette=sns.color_palette( n_colors=4),
     data=df_subset,
     legend="full",
     alpha=0.5
 )
 ```
-Here is the visualization of the dataset and from it we can see several dinstictive clusters. 
 
-![cluster visualisation](figs/cluster_visualisation_tsne.png)
+Here is the visualization of the dataset and from it, we can see several distinctive clusters. 
 
+![cluster visualisation](figs/tsne-visualisation.png)
 
-Then, by changing the hyper-parameter epsilon of the DBSCAN clustering models, we try to find the best match which can 
+Then, by changing the hyper-parameter `epsilon` of the DBSCAN clustering models, we tried to find the best match which can 
 label the clusters matching the visualisation.
 
 ```python
@@ -170,36 +172,105 @@ for eps in [0.05, 0.1, 0.2, 0.3, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 5.0]:
         alpha=0.5
     )
     plt.show()
-
 ```
 
 It was found that when epsilon = 3.0, the clustering results matches the visualisation of the clusters the best, which is 
 shown in the figure below.
 
-![clustering](figs/clustering.png)
+![clustering](figs/tsne-visualisation_eps_3.0.png)
 
-Therefore, we set the cluster labels for the model with epsilon=3.0 and min_samples=10 as the target column for training 
+Therefore, we set the cluster labels for the model with `epsilon` = 3.0 and `min_samples` = 10 as the target column for training 
 the classifiers in the next step.
 
 ```python
 dbscan = DBSCAN(eps=3.0 , min_samples=min_samples)
 dbscan.fit(Clus_dataSet2)
 cluster_dataset2["labels"]=dbscan.labels_
-df_subset["labels"]=dbscan.labels_
 ```
 
 #### Classification Using the Cluster Labels
 
+We train our xgboost classifier using the script below. First, we import the required packages. Then, select the 
+feature columns and target column, split the data into datasets for training and testing, and train the classifier 
+with the training dataset.
 
 
-#### Export and Deploy the model
+```python
+try:
+    import xgboost
+except ImportError as ex:
+    print("Error: the xgboost library is not installed.")
+    xgboost = None
+from sklearn.model_selection import train_test_split
+from sklearn import metrics
+X = cluster_dataset2.drop(['labels'], axis=1)
+y = cluster_dataset2.labels
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=3)
+xgb_clr = xgboost.XGBClassifier()
+xgb_clr.fit(X_train, y_train)
 
-In this notebook, we have explored the following areas:
-- Used t-SNE technique to visualize the high-dimensional dataset, find distinctions among the dataset 
-- Used DBSCAN to perform the outlier detection (clustering) against the unlabelled dataset. From the clustering, we got the labels of the instances
-- We then used the labels to train classifiers to perform both multiclass classification and binary classification with XGBoost and Decision Tree algorithms. 
-- Generally, the classifiers are good at predicting the labels except for the noises which might be due to their low occurrences (~0.1%)
-- Finally, we exported the model and deployed it on Cloud Run
+
+```
+
+We can use the trained model to make predictions for unseen test dataset. 
+Then, we can print the confusion matrix and the evaluation metrics.
+It was shown that the model can predict the labels for the total 3,000 data entries correctly.
+
+![confusion matrix](figs/confusion_matrix.png)
+
+
+#### Export and Deploy the Model
+
+After we trained the model in the above section, 
+we can now export the model & serve the model from Cloud Run. We saved the model to a local model file by running the script below.
+
+```python
+xgb_clr.save_model('xgb_model.bst')
+```
+
+Then, to deploy a model on Cloud Run, we need the following files
+- `app.py` - flask app for serving the model
+- `Dockerfile` - for building Docker image according to specifics
+- `requirements.txt` - a list of dependencies
+- `service.yaml` - specification of the configuration of the deployment
+- `xgb_model.bst`: the xgboost model file
+
+Following these steps to deploy the model on Cloud Run
+1. Make sure the current working directory is the working directory containing the above-listed files. 
+1. Then, we build a docker image by running 
+`docker build -t gcr.io/gft-bike-insurance/predictive-maintenance:latest .`
+1. After this, push the image into Google Container Registry (GCR) by running `docker push gcr.io/gft-bike-insurance/predictive-maintenance`
+1. We can deploy the model image on Cloud Run using the Cloud Console or the service.yaml file and `gcloud beta run services replace` cli
+1. Finally, we get the endpoint of the cloud run service ('https://predictive-maintenance-apnir7ajvq-nw.a.run.app' in this case)
+
+After the model is deployed on Cloud Run, we can run the following script to make requests.
+
+```python
+import subprocess
+import json
+
+endpoint = 'https://predictive-maintenance-apnir7ajvq-nw.a.run.app'
+one_entry = {'cTemp': 81.0,
+             'eLoad': 39.2156862745098,
+             'iat': 43.0,
+             'imap': 41.0,
+             'kpl': 0.0,
+             'maf': 2.87,
+             'rpm': 791.0,
+             'speed': 0.0,
+             'tPos': 15.2941176470588}
+output = subprocess.check_output("echo $(gcloud auth print-identity-token)", shell=True, text=True)
+access_token = "Bearer " + output[:-1]
+
+headers = {'Authorization': access_token}
+
+response = requests.post(endpoint + '/run-predictive-maintenance', 
+                         headers=headers, 
+                         json=one_entry)
+print(response.text)
+```
+
+The outcome was 0, meaning that this is considered as a normal instance so that no special attention is required.
 
 ### Competitive Driving Analysis
 ### Abnormally Detection
