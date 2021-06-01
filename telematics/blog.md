@@ -106,12 +106,11 @@ Finally, we exported the model and deployed it on Cloud Run.
 
 For clustering, we use the Density-Based Spatial Clustering of Applications with Noise (DBSCAN) to get the labels. 
 This technique is one of the most common clustering algorithms which works based on density of object. 
-
 It works based on two parameters: `epsilon` and `minimum samples`
-- `epsilon` determines a specified radius that if includes enough number of points within, we call it dense area
+- `epsilon` determines a specified radius that if includes enough number of points within
 - `minimum samples` determine the minimum number of data points we want in a neighborhood to define a cluster
 
-For clustering, we dropped the columns "battery" and "tAdv" for we found these two columns are not very informative from our exploration. 
+We dropped the columns "battery" and "tAdv" as we found these two columns are not very informative from our exploration. 
 The data is shown as below
 
 ![data for clustering](figs/data_for_clustering.png)
@@ -190,8 +189,8 @@ cluster_dataset2["labels"]=dbscan.labels_
 
 #### Classification Using the Cluster Labels
 
-We train our xgboost classifier using the script below. First, we import the required packages. Then, select the 
-feature columns and target column, split the data into datasets for training and testing, and train the classifier 
+We trained our xgboost classifier using the script below. First, we imported the required packages. Then, selected the 
+feature columns and target column, split the data into datasets for training and testing, and trained the classifier 
 with the training dataset.
 
 
@@ -212,8 +211,8 @@ xgb_clr.fit(X_train, y_train)
 
 ```
 
-We can use the trained model to make predictions for unseen test dataset. 
-Then, we can print the confusion matrix and the evaluation metrics.
+We used the trained model to make predictions for unseen test dataset. 
+Then, we printed the confusion matrix and the evaluation metrics.
 It was shown that the model can predict the labels for the total 3,000 data entries correctly.
 
 ![confusion matrix](figs/confusion_matrix.png)
@@ -221,14 +220,14 @@ It was shown that the model can predict the labels for the total 3,000 data entr
 
 #### Export and Deploy the Model
 
-After we trained the model in the above section, 
+After we have trained the model in the above section, 
 we can now export the model & serve the model from Cloud Run. We saved the model to a local model file by running the script below.
 
 ```python
 xgb_clr.save_model('xgb_model.bst')
 ```
 
-Then, to deploy a model on Cloud Run, we need the following files
+Then, to deploy a model on Cloud Run, we need the following files to be in one directory
 - `app.py` - flask app for serving the model
 - `Dockerfile` - for building Docker image according to specifics
 - `requirements.txt` - a list of dependencies
@@ -236,14 +235,14 @@ Then, to deploy a model on Cloud Run, we need the following files
 - `xgb_model.bst`: the xgboost model file
 
 Following these steps to deploy the model on Cloud Run
-1. Make sure the current working directory is the working directory containing the above-listed files. 
+1. Make sure the current working directory is the directory containing the above-listed files. 
 1. Then, we build a docker image by running 
 `docker build -t gcr.io/gft-bike-insurance/predictive-maintenance:latest .`
 1. After this, push the image into Google Container Registry (GCR) by running `docker push gcr.io/gft-bike-insurance/predictive-maintenance`
 1. We can deploy the model image on Cloud Run using the Cloud Console or the service.yaml file and `gcloud beta run services replace` cli
 1. Finally, we get the endpoint of the cloud run service ('https://predictive-maintenance-apnir7ajvq-nw.a.run.app' in this case)
 
-After the model is deployed on Cloud Run, we can run the following script to make requests.
+After the model has been deployed on Cloud Run, we can run the following script to make requests.
 
 ```python
 import subprocess
@@ -270,7 +269,7 @@ response = requests.post(endpoint + '/run-predictive-maintenance',
 print(response.text)
 ```
 
-The outcome was 0, meaning that this is considered as a normal instance so that no special attention is required.
+The outcome was 0, meaning that this specific data entry is considered as normal so no special attention is required.
 
 ### Competitive Driving Analysis
 ### Abnormally Detection
