@@ -79,8 +79,74 @@ We trained the models using telematics data that follows the OBD-II standard. Th
 ## Kafka Setup and Config
 - Broker/Producer/Consumer/Zookeeper/Simulators
 
+We bootsrapped the kafka environment using [Bitnami Kafka Stack for Google Cloud Platform](https://console.cloud.google.com/marketplace/product/bitnami-launchpad/kafka?project=experiment-227714&folder=&organizationId=). 
+
+We developed the telematics streaming analytics using two Kafka brokers with one Zookeeper. They all use machine type `n1-standard-1 (1 vCPU, 3.75 GB memory)`. 
+
+#### Kafka-Python Library
+
+We built a Kafka producer using the python library `Kafka-Python` which can be downloaded and installed from [`pypi`](https://pypi.org/project/kafka-python/). We use this producer to simulate the action of emitting telematics data. 
+
+##### Producer
+
+You can create a producer using the following:
+
+```python
+
+from kafka import KafkaProducer
+producer = KafkaProducer(bootstrap_servers=['IP_BROKER_1:PORT', 'IP_BROKER_2:PORT'],
+                         security_protocol='SASL_PLAINTEXT', 
+                         sasl_mechanism='PLAIN', 
+                         sasl_plain_username='XXXX', sasl_plain_password='PPPPPP')
+						 
+```
+
+Once a producer is created, you can then start to produce data to the Kafka topic:
+
+```python
+producer.send('TELEMATICS_DEMO', b'raw_bytes1478')
+```
+
+We run the same code from different servers to simulate of sending telematics from different vehicle.
+
+##### Consumer
+
+To create a consumer you can using the following code:
+
+```python
+from kafka import KafkaConsumer
+
+consumer = KafkaConsumer('TELEMATICS_DEMO',
+                         group_id='Telematic_Grp',
+                         bootstrap_servers=['IP_BROKER_1:PORT', 'IP_BROKER_2:PORT'],
+                         security_protocol='SASL_PLAINTEXT', 
+                         sasl_mechanism='PLAIN', 
+                         auto_offset_reset='latest', #enable_auto_commit=False,
+                         sasl_plain_username='XXXX', sasl_plain_password='PPPPPP')
+						 
+```
+
+To consume the message from a Kafta Topic, you can create a for-loop to continuously check the topic, if a new message available, the consumer will pick up.
+
+```python
+for message in consumer:
+    # message value and key are raw bytes -- decode if necessary!
+    # e.g., for unicode: `message.value.decode('utf-8')`
+    print("getting messages: ")
+    print ("%s:%d:%d: key=%s value=%s" % (message.topic, message.partition,
+                                          message.offset, message.key,
+                                          message.value))
+```
+
+Because a consumer has to continuously and actively(note: not being triggered by) checking a topic, it is better to host it on a compute engine. Compare to Cloud Run or Cloud Function, both need to be triggered by another component. If message consumption is not important, you can also scheduled the message consumption with Cloud Composer, so that a pre-emptive compute engine can be started to consume a constant set of message each time, and terminated after completion.  
 
 ## ML Modelling
+
+We are presenting two modelling cases using the telematics data. 
+
+In the first part, we discuss the predictive maintenance modelling approach. We can apply the learned model to make on-stream prediction, i.e., whenever a telamtics record is received, we will ask the model to make prediction and update a driver to maintenance score table in BigQuery.
+
+In the second part, we discuss the speed control risk analysis. This will train a model that predict on a windows of continuous reading of telematics data. This model can be scheduled to read from table of received telematics data and update a speed control score table based on result of the analysis.  
 
 ### Predictive Maintenance
 
@@ -448,11 +514,37 @@ def get_score():
 
 The score and queried driver id will be send back as the final response to the request. 
 
-## Model Deployment
-- Cloud Run
-
 ## Generate Quotes from Guidewire
-- Query score from Guidewire
-- Generate quotes from Guidewire
+
+We tested the deployed services by sending API requests from a Guidewire PolicyCenter (v10.0.3). Guidewire is a widely used software platform using in the P&C insurance industry. PolicyCenter, ClaimCenter, BillingCenter are the three applications provided by Guidewire that cover the most important business functions of any insurance provider.
+
+We extended the PolicyCenter's policy quoting engine to send API request to the deployed machine learning services described above for deciding the quoted price of an insurance product (e.g., personal auto instrance) for a user. The machine learning services will response the request by providing query result on the score tables against the user in question. 
+
+We added a trigger at the page where a quote has been calculated by the PolicyCenter's default quoting engine. 
+
+![guidewire_quoting_page](./figs/pc-quoting-trigger.png)
+
+We a user click the button for sending request to the machine learning. 
+
+Guidewire will send out an API request with driver ID included in the request data:
+
+```json
+{
+	"driver":"device7"
+}
+``` 
+
+Once the response from the machine learning service is received:
+
+```json
+{"Speed_control_model": 0.03, "Vehicle_maintainance_model": 0.0, "Final_score": 0.26}
+```
+
+the PolicyCenter will provided an updated quote price:
+
+![guidewire_quoting_page](./figs/pc-quoting-update.png)
+
+The implemented architecture presented above is adaptable to include other machine learning services can examine other aspects of insured user. 
+
 
 ## Conclusion
