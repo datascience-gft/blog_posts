@@ -522,7 +522,7 @@ We extended the PolicyCenter's policy quoting engine to send API request to the 
 
 We added a trigger at the page where a quote has been calculated by the PolicyCenter's default quoting engine. 
 
-![guidewire_quoting_page](./figs/pc-quoting-trigger.png)
+![guidewire_quoting_page](./figs/pc-quoting-trigger.PNG)
 
 We a user click the button for sending request to the machine learning. 
 
@@ -542,7 +542,7 @@ Once the response from the machine learning service is received:
 
 the PolicyCenter will provided an updated quote price:
 
-![guidewire_quoting_page](./figs/pc-quoting-update.png)
+![guidewire_quoting_page](./figs/pc-quoting-update.PNG)
 
 The implemented architecture presented above is adaptable to include other machine learning services can examine other aspects of insured user. 
 
