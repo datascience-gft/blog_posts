@@ -516,15 +516,15 @@ The score and queried driver id will be send back as the final response to the r
 
 ## Generate Quotes from Guidewire
 
-We tested the deployed services by sending API requests from a Guidewire PolicyCenter (v10.0.3). Guidewire is a widely used software platform using in the P&C insurance industry. PolicyCenter, ClaimCenter, BillingCenter are the three applications provided by Guidewire that cover the most important business functions of any insurance provider.
+We tested the deployed Cloud Run machine learning services by sending API requests from a Guidewire PolicyCenter (v10.0.3). Guidewire is a widely used software platform in the P&C insurance industry. PolicyCenter, ClaimCenter, BillingCenter are the three applications provided by Guidewire that cover the most important business functions of any insurance provider.
 
 We extended the PolicyCenter's policy quoting engine to send API request to the deployed machine learning services described above for deciding the quoted price of an insurance product (e.g., personal auto instrance) for a user. The machine learning services will response the request by providing query result on the score tables against the user in question. 
 
-We added a trigger at the page where a quote has been calculated by the PolicyCenter's default quoting engine. 
+We added a trigger at the front-end web page where a quote has been calculated by the PolicyCenter's default quoting engine. 
 
 ![guidewire_quoting_page](./figs/pc-quoting-trigger.PNG)
 
-We a user click the button for sending request to the machine learning. 
+When a user click the button for sending request to the machine learning. 
 
 Guidewire will send out an API request with driver ID included in the request data:
 
@@ -544,7 +544,11 @@ the PolicyCenter will provided an updated quote price:
 
 ![guidewire_quoting_page](./figs/pc-quoting-update.PNG)
 
-The implemented architecture presented above is adaptable to include other machine learning services can examine other aspects of insured user. 
+The implemented architecture presented above is adaptable to include other machine learning services that can examine other aspects of insured user based on the telematics data. 
 
 
-## Conclusion
+## Conclusion and Discussion
+
+In this blog, we presented an implemented end-to-end solution on leveraging cutting edge machine learning algorithms do steaming analytic on telematics data. For demonstration purpose, We trained and deployed two machine learning models that analyse on telematics data sourced from simulated devices, and the result of analysis can be queried and leveraged by a user facing application for prvoding quoted price on insurance policy. This solution can be adapted to incorporate other machine learning algorithms and tool on analysing analytics data.
+
+We anticipate that there are several related solution architectures implemented on Google Cloud or using alternative functional components such as Cloud IoT and PubSub. Different architectures or functional components have pros and cons depends on what requirements they aim to realise. 
