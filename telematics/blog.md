@@ -5,9 +5,9 @@ Many black-box insurance, also known as telematics insurance, leverage telematic
 Telematics devices allow the insurance providers to track insurers' driving through an app or by having a telematics box fitted in their vehicle. Enormous amount of data streamed by telematics devices can be analysed using cutting-edge machine learning models to help and mine insights into driver's behaviour. With the help of telematics data, owner of the vehicle can be proactively warned on abnormality before it becoming severe.
 
 In this blog, we present an implemented solutions for predicting risk scores by analysing telematics data. We achived the following objectives:
-- we designed a Google Cloud based solution architecture for training and serving machine learning on streamed telematics data streaming.
-- we trained a set of machine learning models based on pre-collected [publicly available telematics data](https://www.kaggle.com/yunlevin/levin-vehicle-telematics) that are following the OBD-II standard. 
-- we trained different kind of machine learning models, include supervised and unsupervised, that can demonstrate the capability of doing:
+- We designed a Google Cloud based solution architecture for training and serving machine learning on streamed telematics data streaming.
+- We trained a set of machine learning models based on pre-collected [publicly available telematics data](https://www.kaggle.com/yunlevin/levin-vehicle-telematics) that are following the OBD-II standard. 
+- We trained different kind of machine learning models, include supervised and unsupervised, that can demonstrate the capability of doing:
   - Vehicle predictive maintenance
   - Anormaly detection
   - Assessing risk in speed control
@@ -18,15 +18,15 @@ The solution is implemented on the following Google Cloud's services:
 - Data Stores:
   - Big Query: a fully-managed enterprise-level data warehouse that can be queried using SQL at scale of perabyte. In this case, we use BigQuery to store streamed telematics data for being processed and analysed.
   - Cloud Storage: a fully-managed object store. In this case, we use it to store model artefacts. 
-  - Cloud SQL(SQL Server): a fully managed MS SQL Server as a backend relational database for Guidewire PolicyCenter(explained later).
+  - Cloud SQL(SQL Server): a fully managed Microsoft SQL Server as a backend relational database for Guidewire PolicyCenter(explained later).
 - Model Hosting Services:
-  - Cloud Run: a severless, fully-managed and highly scalable host environment for containerised application. In this case, we leverage Cloud Run to serve model prediction services run in docker containers. 
+  - Cloud Run: a severless, fully-managed and highly scalable host environment for containerised applications. In this case, we leverage Cloud Run to serve model prediction services running in docker containers. 
 
 ### Kafka
 
 We adopt the widely used open source application messaging tool Kafka for buffering streamed-in telematics data that will later be consumed, and stored into BigQuery.
 
-In this blog, we deployed Kafka onto GCP using [Bitnami](https://docs.bitnami.com/google/infrastructure/kafka/). Bitnami provide service for simplifying the deployment of Kafka brokers and ZooKeeper.  
+In this blog, we deployed Kafka onto GCP using [Bitnami](https://docs.bitnami.com/google/infrastructure/kafka/) which provides service for simplifying the deployment of Kafka brokers and ZooKeeper.  
 
 ### Guidewire
 
