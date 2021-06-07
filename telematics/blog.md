@@ -8,9 +8,8 @@ In this blog, we present an implemented solutions for predicting risk scores by 
 - We designed a Google Cloud based solution architecture for training and serving machine learning on streamed telematics data streaming.
 - We trained a set of machine learning models based on pre-collected [publicly available telematics data](https://www.kaggle.com/yunlevin/levin-vehicle-telematics) that are following the OBD-II standard. 
 - We trained different kind of machine learning models, include supervised and unsupervised, that can demonstrate the capability of doing:
-  - Vehicle predictive maintenance
-  - Anormaly detection
-  - Assessing risk in speed control
+  - vehicle predictive maintenance
+  - assessment of risks in speed control
 
 The solution is implemented on the following Google Cloud's services:
 - Machine Learning:
@@ -22,6 +21,15 @@ The solution is implemented on the following Google Cloud's services:
 - Model Hosting Services:
   - Cloud Run: a severless, fully-managed and highly scalable host environment for containerised applications. In this case, we leverage Cloud Run to serve model prediction services running in docker containers. 
 
+
+## Solution Architecture 
+
+All the functional components mentioned above is composed together to form the following architecture：
+
+![architecture](./figs/architecture.PNG)
+
+_Figure 1. Solution architecture_
+
 ### Kafka
 
 We adopt the widely used open source application messaging tool Kafka for buffering streamed-in telematics data that will later be consumed, and stored into BigQuery.
@@ -32,32 +40,27 @@ In this blog, we deployed Kafka onto GCP using [Bitnami](https://docs.bitnami.co
 
 Guidewire is the widely used software in the P&C insurance industry. For several consecutive year to 2020, it has been recognised as a learder in Gartner Inc's [Magic Quadrant for P&C Core Platforms](https://www.guidewire.com/about-us/news-and-events/press-releases/20201111/guidewire-insurancesuite-positioned-leader-gartner). 
 
-We have deployed Guidewire's Policy Center v10.0.3 a Windows VM hosted on Google Cloud. The Policy Center is configured to store its data in a MS SQL server database fully managed by Google Cloud.
+Guidewire's Policy Center v10.0.3 was deployed on a Windows virtual machine (VM) hosted on Google Cloud. The Policy Center is configured to store its data in a Microsoft SQL server database fully managed by Google Cloud.
+We integrated the machine learning prediction service into the policy quoting engine of the Policy Center. 
+Therefore, inside the Policy Center, it can query machine learning model deployed into Cloud Run containers using REST API to access predicted score on driver's risk level or vehicle's maintenance history. 
+The score can then be used as a basis for adjusting corresponding premium prices originally proposed by any Guidewire's quoting engine. 
 
-We have integrated the machine learning prediction service into the policy quoting engine of the Policy Center so that it can query machine learning model deployed into Cloud Run containers using REST API for accessing predicted score on drivers's risk level or vehicle's maintenance history. The score can then be used as a basis for adjusting corresponding premium prices originally proposed by any Guidewire's quoting engine. 
-
-The machine learning integrated quoting service can also be triggered remotely through SOAP API.   
-
-### Solution Architecture 
-
-All the functional components mentioned above is composed together to form the following architecture：
-
-![architecture](./figs/architecture.PNG)
+Moreover, the machine learning integrated quoting service can also be triggered remotely through SOAP API calls.   
 
 
-## Alternative Approaches:
+### Alternative Approaches:
 
-### Cloud Pub/Sub
+#### Cloud Pub/Sub
 
-Google provides an alternative messaging service that is serverless, highly scalable, and fully-managed. Pub/Sub is a bundled service of Cloud IoT.
+Google provides an alternative messaging service which is serverless, highly scalable, and fully-managed. Pub/Sub is a bundled service of Cloud IoT.
 
 The foundamental difference between Kafka and Pub/Sub is in the way that the message delivery is handle
 - Pub/Sub offers **at-least-once** message delivery and **best-effort ordering** to existing subscribers. 
 - whereas [Kafka **guarantees exactly-once** delivery by default](https://kafka.apache.org/documentation/). Moreover, Kafka [guarantees](https://kafka.apache.org/documentation/#intro_guarantees) that any consumer of a given topic-partition will always read that partition's events **in exactly the same order** as they were written.
 
-Which is better choise strictly depends on the way that downstream applications were designed for consuming and managing the buffered message. 
+The choice between the two strictly depends on the way that downstream applications were designed for consuming and managing the buffered message. 
 
-### Cloud IoT
+#### Cloud IoT
 
 In the proposed architecture, we did not include [Google Cloud IoT](https://cloud.google.com/solutions/iot), because we did not collect data from any actual telematics devices, instead from pre-collected publicly available data. Cloud IoT Core is a fully managed service on Google Cloud Platform that allows you to easily and securely connect, manage, and ingest data from millions of globally dispersed devices. 
 
@@ -77,53 +80,46 @@ We trained the models using telematics data that follows the OBD-II standard. Th
 
 
 ## Kafka Setup and Config
-- Broker/Producer/Consumer/Zookeeper/Simulators
 
-We bootsrapped the kafka environment using [Bitnami Kafka Stack for Google Cloud Platform](https://console.cloud.google.com/marketplace/product/bitnami-launchpad/kafka?project=experiment-227714&folder=&organizationId=). 
-
+The kafka environment was bootsrapped using [Bitnami Kafka Stack for Google Cloud Platform](https://console.cloud.google.com/marketplace/product/bitnami-launchpad/kafka?project=experiment-227714&folder=&organizationId=). 
 We developed the telematics streaming analytics using two Kafka brokers with one Zookeeper. They all use machine type `n1-standard-1 (1 vCPU, 3.75 GB memory)`. 
 
-#### Kafka-Python Library
+We built a Kafka producer and consumers using the python library `Kafka-Python` which can be downloaded and installed from [`pypi`](https://pypi.org/project/kafka-python/). 
 
-We built a Kafka producer using the python library `Kafka-Python` which can be downloaded and installed from [`pypi`](https://pypi.org/project/kafka-python/). We use this producer to simulate the action of emitting telematics data. 
-
-##### Producer
-
-You can create a producer using the following:
+### Producer
+The producer is to simulate the action of emitting telematics data and it 
+can be created using the following Python script (replacing the corresponding fields in <>):
 
 ```python
-
 from kafka import KafkaProducer
-producer = KafkaProducer(bootstrap_servers=['IP_BROKER_1:PORT', 'IP_BROKER_2:PORT'],
+producer = KafkaProducer(bootstrap_servers=['<IP_BROKER_1:PORT>', '<IP_BROKER_2:PORT>'],
                          security_protocol='SASL_PLAINTEXT', 
                          sasl_mechanism='PLAIN', 
-                         sasl_plain_username='XXXX', sasl_plain_password='PPPPPP')
-						 
+                         sasl_plain_username='<username>', sasl_plain_password='<password>')				 
 ```
 
-Once a producer is created, you can then start to produce data to the Kafka topic:
+Once a producer is created, you can then start to produce data to the Kafka topic which is TELEMATICS_DEMO in this case:
 
 ```python
 producer.send('TELEMATICS_DEMO', b'raw_bytes1478')
 ```
 
-We run the same code from different servers to simulate of sending telematics from different vehicle.
+We run the same code from different servers to simulate sending telematics data from different vehicles.
 
-##### Consumer
+### Consumer
 
-To create a consumer you can using the following code:
+To create a consumer you can use the following code (replacing the corresponding fields in <>):
 
 ```python
 from kafka import KafkaConsumer
 
-consumer = KafkaConsumer('TELEMATICS_DEMO',
-                         group_id='Telematic_Grp',
-                         bootstrap_servers=['IP_BROKER_1:PORT', 'IP_BROKER_2:PORT'],
+consumer = KafkaConsumer('<TELEMATICS_DEMO>',
+                         group_id='<Telematic_Grp>',
+                         bootstrap_servers=['<IP_BROKER_1:PORT>', '<IP_BROKER_2:PORT>'],
                          security_protocol='SASL_PLAINTEXT', 
                          sasl_mechanism='PLAIN', 
                          auto_offset_reset='latest', #enable_auto_commit=False,
-                         sasl_plain_username='XXXX', sasl_plain_password='PPPPPP')
-						 
+                         sasl_plain_username='<username>', sasl_plain_password='<password>') 
 ```
 
 To consume the message from a Kafta Topic, you can create a for-loop to continuously check the topic, if a new message available, the consumer will pick up.
@@ -138,14 +134,14 @@ for message in consumer:
                                           message.value))
 ```
 
-Because a consumer has to continuously and actively(note: not being triggered by) checking a topic, it is better to host it on a compute engine. Compare to Cloud Run or Cloud Function, both need to be triggered by another component. If message consumption is not important, you can also scheduled the message consumption with Cloud Composer, so that a pre-emptive compute engine can be started to consume a constant set of message each time, and terminated after completion.  
+Since a consumer needs to continuously and actively (note: not being triggered by) check a topic, it is better to host the consumer on a compute engine 
+than Cloud Run or Cloud Functions because both need to be triggered by another component. 
+If message consumption is not important, you can also schedule the message consumption with Cloud Composer, so that a pre-emptive compute engine can be started to consume a constant set of message each time, and terminated after completion.  
 
 ## ML Modelling
 
-We are presenting two modelling cases using the telematics data. 
-
-In the first part, we discuss the predictive maintenance modelling approach. We can apply the learned model to make on-stream prediction, i.e., whenever a telamtics record is received, we will ask the model to make prediction and update a driver to maintenance score table in BigQuery.
-
+We are presenting two modelling cases using the telematics data.
+In the first part, we discuss the predictive maintenance modelling approach. We can apply the learned model to make online predictions, i.e., whenever a telamtics record is received, we will ask the model to make prediction and update a driver to maintenance score table in BigQuery.
 In the second part, we discuss the speed control risk analysis. This will train a model that predict on a windows of continuous reading of telematics data. This model can be scheduled to read from table of received telematics data and update a speed control score table based on result of the analysis.  
 
 ### Predictive Maintenance
@@ -273,8 +269,6 @@ y = cluster_dataset2.labels
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=3)
 xgb_clr = xgboost.XGBClassifier()
 xgb_clr.fit(X_train, y_train)
-
-
 ```
 
 We used the trained model to make predictions for unseen test dataset. 
@@ -338,18 +332,18 @@ print(response.text)
 The outcome was 0, meaning that this specific data entry is considered as normal so no special attention is required.
 
 ### Competitive Driving Analysis
-### Abnormally Detection
 
-
-#### Competitive Driving Analysis
-
-We have survey a few telematics insurance providers in the UK. We found from the result (as shown in the following figure) that one of the key areas that these companies want the telematics data to reveal is how the driver control speed while driving. Many young and newly qualified drivers carry the behavour of competitive driving. They tend to apply rapid change in speed (acceleration or deceleration).
+We have surveyed a few telematics insurance providers in the UK. 
+We found from the result (as shown in the following table) that one of the key areas that these companies want the telematics data to reveal is how the driver control speed while driving. 
+Many young and newly qualified drivers carry the behaviour of competitive driving, and they tend to apply rapid changes in speed (acceleration or deceleration).
 
 ![telematicsProviders](./figs/telematicsInsProviders.png)
 
-The telematics data we collected from Kaggle contain timely record of various types of metrics of a vehicle when it was driving on a trip. We would like to use this data to train a machine learning model to be able to predict whether certain pattern of telematics recording is associated to risky speed control behavour. In other words, given a continuous of reading of telematics data for, e.g. 30 seconds, we want the model to predict if this driver is a risky speed controller. 
+The telematics data we collected from Kaggle contain timely record of various types of metrics of a vehicle when it was driving on a trip. 
+We would like to use this data to train a machine learning model to be able to predict whether certain pattern of telematics recording is associated with risky speed control behaviours. 
+In other words, given a continuous of reading of telematics data, e.g. 30 seconds, we want the model to predict if this driver is a risky speed controller or not. 
 
-We have manually labeled the data based on domain knowledge and examine the pattern of the telematics data.
+The data was manually labeled based on domain knowledge and the pattern of the telematics data was examined.
 
 ![speed_analysis_data](./figs/labeled_data_for_speed_control_analysis.PNG)
 
@@ -389,13 +383,15 @@ X_train, X_test, y_train, y_test = train_test_split( X, y, test_size=0.33, shuff
 
 ```
 
-We have continuously windowed data into time frames. The size of each window can be configured. 
+The data is continuously windowed into time frames and the size of each window can be configured. 
 
-We formalised this problem as a time-framed based modelling. The input the trained model will take is a matrix where each row is a single telematics records at a time, in our case, a second, while each column is a metric collected by the telematics device, e.g. rpm, iat, eLoad, kpl. The most widely used machine learning model architecture is RNN (recurrent neural network), in particular, [LSTM](https://dl.acm.org/doi/10.1162/neco.1997.9.8.1735) and [GRU](https://arxiv.org/abs/1406.1078). 
+We formalised this problem as a time-framed based modelling. The input the trained model will take is a matrix where each row is a single telematics records at a time, in our case, a second, while each column is a metric collected by the telematics device, e.g. rpm, iat, eLoad, kpl. The most widely used machine learning model architecture is RNN (recurrent neural network), in particular, [LSTM](https://dl.acm.org/doi/10.1162/neco.1997.9.8.1735) and [GRU](https://arxiv.org/abs/1406.1078).
+In this blog, we will present a modelling example using GRU. Introduced in 2014, GRU aims to solve the vanishing gradient problem which comes with a standard RNN. 
+GRU can also be considered as a variation on the LSTM because both are designed similarly and, in some cases, produce equally excellent results. 
+It is not in the scope of this blog to provide detailed explanation on the mathematical foundation that GRU is built on. 
+We recommend the reader this [tutorial](https://towardsdatascience.com/understanding-gru-networks-2ef37df6c9be) or the [original paper](https://arxiv.org/abs/1406.1078) for detail.
 
-In this blog, we will present a modelling example using GRU. Introduced in 2014, GRU aims to solve the vanishing gradient problem which comes with a standard recurrent neural network. GRU can also be considered as a variation on the LSTM because both are designed similarly and, in some cases, produce equally excellent results. It is not in the scope of this blog to provide detailed explanation on the mathematical foundation that GRU is built on. We recommend the reader this [tutorial](https://towardsdatascience.com/understanding-gru-networks-2ef37df6c9be) or the [original paper](https://arxiv.org/abs/1406.1078) for detail.
-
-We use the following code to add two layers of GRU into a Keras tensorflow model:
+The following code can be used to add two layers of GRU into a Keras tensorflow model:
 
 ```python
 
@@ -412,19 +408,22 @@ model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy']
 
  ```
 
-The two layers of GRU unites are followed by one feed forward layers and an output layer.
+The two layers of GRU units are followed by one feed forward layer and an output layer.
 
 ![gru_model](./figs/gru_model.PNG)
 
-Below is the train and test accuracy monitored during the training process.
+Below is the train and test accuracies monitored during the model training. It can be seen that both 
+accuracies are around 0.9 after 40 epochs, which is fairly good.
 
 ![model_accuracy](./figs/gru_accuracy.png)
 
-Once the model is trained we output the model as `pkl` file, embed it into a container and deploy to Cloud Run.
+_Figure 2. Train and test accuracies during training_
 
+Once the model is trained we export the model as a `pkl` file, 
+embed it into a container and deploy it to Cloud Run.
 The deployment configuration and prediction service is created in the same way as predictive maintenance modelling. 
 
-Below is a code example for the deployed model being triggered for prediction using Rest API.
+Below is a code example for the deployed model being triggered for prediction using REST API.
 
 ```python
 @app.route('/run-speed-control-analysis', methods=['POST'])
@@ -485,9 +484,10 @@ def predict():
     return 'All Done'
 ```
 
-Here we asssume that the received telematics data is consumed and inserted into (by a Kafka consumer process) a BigQuery table `streamed_in_telematics_data`. The code above will read the data from the table, do the require feature engineering, and then trigger the loaded model. The predicted result will be saved into another BigQuery table `speed_control_analysis`.
-
-This result table can later be queried by downstream application for retrieving risk score associated to a telematics devices belonged to a driver. 
+Here we asssume that the received telematics data is consumed and inserted into (by a Kafka consumer process) a BigQuery table `streamed_in_telematics_data`. 
+The code above will read the data from the table, do the required feature engineering, and then trigger the deployed model. 
+The predicted result will be saved into another BigQuery table called `speed_control_analysis`.
+This result table can later be queried by downstream applications for retrieving risk score associated to a telematics devices belonged to a driver. 
 
 ```python
 @app.route('/query-speed-control-analysis', methods=['POST'])
@@ -512,20 +512,19 @@ def get_score():
     return jsonify(response) 
 ```
 
-The score and queried driver id will be send back as the final response to the request. 
+The score and queried driver id will be sent back as the final response to the request. 
 
 ## Generate Quotes from Guidewire
 
 We tested the deployed Cloud Run machine learning services by sending API requests from a Guidewire PolicyCenter (v10.0.3). Guidewire is a widely used software platform in the P&C insurance industry. PolicyCenter, ClaimCenter, BillingCenter are the three applications provided by Guidewire that cover the most important business functions of any insurance provider.
 
-We extended the PolicyCenter's policy quoting engine to send API request to the deployed machine learning services described above for deciding the quoted price of an insurance product (e.g., personal auto instrance) for a user. The machine learning services will response the request by providing query result on the score tables against the user in question. 
-
-We added a trigger at the front-end web page where a quote has been calculated by the PolicyCenter's default quoting engine. 
+We extended the PolicyCenter's policy quoting engine to send API request to the deployed machine learning services described above for deciding the quoted price of an insurance product (e.g., personal auto insurance) for a user. 
+The machine learning services will respond to the request by providing query result on the score tables against the user in question. 
 
 ![guidewire_quoting_page](./figs/pc-quoting-trigger.PNG)
 
-When a user click the button for sending request to the machine learning. 
-
+A trigger button was added at the front-end web page where a quote has been calculated by the PolicyCenter's default quoting engine. 
+When a user clicks the button for sending a request to the machine learning services,
 Guidewire will send out an API request with driver ID included in the request data:
 
 ```json
@@ -534,21 +533,28 @@ Guidewire will send out an API request with driver ID included in the request da
 }
 ``` 
 
-Once the response from the machine learning service is received:
+Here is an example of the response from the machine learning services received:
 
 ```json
 {"Speed_control_model": 0.03, "Vehicle_maintainance_model": 0.0, "Final_score": 0.26}
 ```
 
-the PolicyCenter will provided an updated quote price:
+Then, the PolicyCenter will provide an updated quote price:
 
 ![guidewire_quoting_page](./figs/pc-quoting-update.PNG)
 
-The implemented architecture presented above is adaptable to include other machine learning services that can examine other aspects of insured user based on the telematics data. 
+The implemented architecture presented above can easily be adapted to include other machine learning services that can examine other aspects of insured user based on the telematics data. 
 
 
-## Conclusion and Discussion
+## Conclusions
 
-In this blog, we presented an implemented end-to-end solution on leveraging cutting edge machine learning algorithms do steaming analytic on telematics data. For demonstration purpose, We trained and deployed two machine learning models that analyse on telematics data sourced from simulated devices, and the result of analysis can be queried and leveraged by a user facing application for prvoding quoted price on insurance policy. This solution can be adapted to incorporate other machine learning algorithms and tool on analysing analytics data.
+In this blog, we presented an end-to-end solution to leveraging cutting edge machine learning algorithms to do streaming analytics on telematics data. 
+The streaming analytics in turn was incorporated in the quoting processes to provide personalised insurance products for customers.
 
-We anticipate that there are several related solution architectures implemented on Google Cloud or using alternative functional components such as Cloud IoT and PubSub. Different architectures or functional components have pros and cons depends on what requirements they aim to realise. 
+For demonstration purpose, the following tasks are performed in this study:
+- We trained and deployed two machine learning models that analyse telematics data sourced from simulated devices
+- The result of analysis was consumed by a user-facing application for providing quoted price on insurance policy. 
+- This solution can be adapted to incorporate other machine learning algorithms and tools on analysing analytics data according to demand
+
+It is anticipatedd that there are other related solution architectures implemented on Google Cloud or using alternative functional components such as Cloud IoT and PubSub. 
+However, as different architectures or functional components have pros and cons, the choice should be dependent on specific defined requirements.
