@@ -451,7 +451,7 @@ accuracies are around 0.9 after 40 epochs, which is fairly good.
 
 ![model_accuracy](./figs/gru_accuracy.png)
 
-_Figure Train and test accuracies during training of a GRU model_
+_Figure 2. Train and test accuracies during training of a GRU model_
 
 Once the model is trained we export the model as a `pkl` file, 
 embed it into a container and deploy it to Cloud Run.
